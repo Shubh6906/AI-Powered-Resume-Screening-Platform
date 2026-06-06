@@ -1,10 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Briefcase, Building2 } from "lucide-react";
 
 import AuthCard from "../../components/AuthCard";
 import AuthShowcase from "../../components/AuthShowcase";
 
 export default function RegisterPage() {
+  const [role, setRole] = useState("candidate");
+
   return (
     <main className="min-h-screen grid lg:grid-cols-2">
       {/* Left Side */}
@@ -16,9 +21,75 @@ export default function RegisterPage() {
       <div className="flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-slate-950">
         <AuthCard
           title="Create Account"
-          subtitle="Start hiring smarter with ResumeAI"
+          subtitle={
+            role === "candidate"
+              ? "Find your next opportunity"
+              : "Hire smarter with AI"
+          }
         >
           <form className="space-y-5">
+            {/* Role Selection */}
+            <div>
+              <label className="block mb-3 font-medium">
+                Select Role
+              </label>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setRole("candidate")}
+                  className={`p-4 rounded-xl border transition text-left ${
+                    role === "candidate"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                      : "border-gray-300 dark:border-slate-700"
+                  }`}
+                >
+                  <User
+                    size={24}
+                    className="mb-2 text-blue-500"
+                  />
+
+                  <h3 className="font-semibold">
+                    Candidate
+                  </h3>
+
+                  <p className="text-sm text-gray-500">
+                    Apply for jobs
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole("recruiter")}
+                  className={`p-4 rounded-xl border transition text-left ${
+                    role === "recruiter"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                      : "border-gray-300 dark:border-slate-700"
+                  }`}
+                >
+                  <Building2
+                    size={24}
+                    className="mb-2 text-blue-500"
+                  />
+
+                  <h3 className="font-semibold">
+                    Recruiter
+                  </h3>
+
+                  <p className="text-sm text-gray-500">
+                    Hire talent
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            <input
+              type="hidden"
+              name="role"
+              value={role}
+            />
+
+            {/* Full Name */}
             <div>
               <label className="block mb-2 font-medium">
                 Full Name
@@ -38,6 +109,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Email */}
             <div>
               <label className="block mb-2 font-medium">
                 Email
@@ -57,6 +129,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Password */}
             <div>
               <label className="block mb-2 font-medium">
                 Password
@@ -76,6 +149,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Confirm Password */}
             <div>
               <label className="block mb-2 font-medium">
                 Confirm Password
@@ -95,6 +169,29 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Recruiter Company Field */}
+            {role === "recruiter" && (
+              <div>
+                <label className="block mb-2 font-medium">
+                  Company Name
+                </label>
+
+                <div className="relative">
+                  <Briefcase
+                    size={18}
+                    className="absolute left-3 top-4 text-gray-400"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Acme Inc."
+                    className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Submit */}
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition"
@@ -102,6 +199,7 @@ export default function RegisterPage() {
               Create Account
             </button>
 
+            {/* Terms */}
             <p className="text-xs text-center text-gray-500">
               By creating an account, you agree to our{" "}
               <Link
