@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Briefcase,
@@ -38,8 +39,10 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
   return (
-    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 min-h-screen">
+    <aside className="hidden md:block w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 min-h-screen">
       <div className="p-6">
         <h1 className="text-2xl font-bold">
           ResumeAI
@@ -54,7 +57,11 @@ export default function Sidebar() {
             <Link
               key={item.title}
               href={item.href}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition mb-2"
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition mb-2 ${
+                pathname === item.href
+                  ? "bg-blue-600 text-white"
+                  : "hover:bg-gray-100 dark:hover:bg-slate-800"
+              }`}
             >
               <Icon size={18} />
               <span>{item.title}</span>
