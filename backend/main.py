@@ -12,6 +12,12 @@ from app.routers.applications import router as applications_router
 
 from app.models.application import Application
 
+from app.models.resume import Resume
+
+from app.routers.resume import (
+    router as resume_router,
+)
+
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
@@ -32,4 +38,8 @@ from app.routers.applications import (
 
 app.include_router(
     applications_router
+)
+
+app.include_router(
+    resume_router
 )
