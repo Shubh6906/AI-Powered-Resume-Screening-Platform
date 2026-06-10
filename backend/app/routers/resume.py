@@ -4,8 +4,8 @@ import shutil
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import File
-from fastapi import HTTPException
 from fastapi import UploadFile
+from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
 
@@ -38,7 +38,9 @@ def upload_resume(
         exist_ok=True,
     )
 
-    file_path = f"uploads/{current_user.id}_{file.filename}"
+    file_path = (
+        f"uploads/{current_user.id}_{file.filename}"
+    )
 
     with open(
         file_path,
@@ -79,3 +81,84 @@ def upload_resume(
     return {
         "message": "Resume uploaded successfully"
     }
+
+
+@router.get("/me")
+def get_my_resume(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resume = (
+        db.query(Resume)
+        .filter(
+            Resume.candidate_id == current_user.id
+        )
+        .first()
+    )
+
+    if not resume:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume not found",
+        )
+
+    return resume
+
+
+@router.delete("/delete")
+def delete_resume(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resume = (
+        db.query(Resume)
+        .filter(
+            Resume.candidate_id == current_user.id
+        )
+        .first()
+    )
+
+    if not resume:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume not found",
+        )
+
+    if os.path.exists(resume.file_path):
+        os.remove(resume.file_path)
+
+    db.delete(resume)
+    db.commit()
+
+    return {
+        "message": "Resume deleted successfully"
+    }
+
+
+@router.get("/{candidate_id}")
+def get_candidate_resume(
+    candidate_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "recruiter":
+        raise HTTPException(
+            status_code=403,
+            detail="Only recruiters can view resumes",
+        )
+
+    resume = (
+        db.query(Resume)
+        .filter(
+            Resume.candidate_id == candidate_id
+        )
+        .first()
+    )
+
+    if not resume:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume not found",
+        )
+
+    return resume
