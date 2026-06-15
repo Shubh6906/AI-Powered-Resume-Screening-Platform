@@ -15,6 +15,14 @@ from app.core.deps import get_db
 from app.models.user import User
 from app.models.resume import Resume
 
+from app.services.pdf_extractor import (
+    extract_text_from_pdf,
+)
+
+from app.services.resume_parser import (
+    parse_resume,
+)
+
 router = APIRouter(
     prefix="/resume",
     tags=["Resume"],
@@ -162,3 +170,32 @@ def get_candidate_resume(
         )
 
     return resume
+
+@router.post("/parse")
+def parse_candidate_resume(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resume = (
+        db.query(Resume)
+        .filter(
+            Resume.candidate_id == current_user.id
+        )
+        .first()
+    )
+
+    if not resume:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume not found",
+        )
+
+    extracted_text = extract_text_from_pdf(
+        resume.file_path
+    )
+
+    parsed_data = parse_resume(
+        extracted_text
+    )
+
+    return parsed_data
