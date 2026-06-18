@@ -22,6 +22,10 @@ from app.routers.ai import (
     router as ai_router,
 )
 
+from app.routers.analytics import (
+    router as analytics_router,
+)
+
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
@@ -50,4 +54,8 @@ app.include_router(
 
 app.include_router(
     ai_router
+)
+
+app.include_router(
+    analytics_router
 )

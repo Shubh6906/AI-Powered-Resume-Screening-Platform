@@ -55,8 +55,16 @@ def calculate_match_score(
             2,
         )
 
+    recommendations = []
+
+    for skill in missing_skills:
+        recommendations.append(
+            f"Learn {skill}"
+        )
+
     return {
         "match_score": match_score,
         "matched_skills": matched_skills,
         "missing_skills": missing_skills,
+        "recommendations": recommendations,
     }
