@@ -1,23 +1,93 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, User, Briefcase, Building2 } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  User,
+  Briefcase,
+  Building2,
+} from "lucide-react";
 
 import AuthCard from "../../components/AuthCard";
 import AuthShowcase from "../../components/AuthShowcase";
 
+import { registerUser } from "../../hooks/useAuth";
+
 export default function RegisterPage() {
-  const [role, setRole] = useState("candidate");
+  const router = useRouter();
+
+  const [role, setRole] =
+    useState("candidate");
+
+  const [fullName, setFullName] =
+    useState("");
+
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [
+    confirmPassword,
+    setConfirmPassword,
+  ] = useState("");
+
+  const [companyName, setCompanyName] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  async function handleSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    if (
+      password !== confirmPassword
+    ) {
+      alert(
+        "Passwords do not match"
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await registerUser(
+        fullName,
+        email,
+        password,
+        role
+      );
+
+      alert(
+        "Account created successfully"
+      );
+
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Registration failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <main className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side */}
       <div className="hidden lg:block bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
         <AuthShowcase />
       </div>
 
-      {/* Right Side */}
       <div className="flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-slate-950">
         <AuthCard
           title="Create Account"
@@ -27,7 +97,10 @@ export default function RegisterPage() {
               : "Hire smarter with AI"
           }
         >
-          <form className="space-y-5">
+          <form
+            className="space-y-5"
+            onSubmit={handleSubmit}
+          >
             {/* Role Selection */}
             <div>
               <label className="block mb-3 font-medium">
@@ -37,9 +110,14 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => setRole("candidate")}
+                  onClick={() =>
+                    setRole(
+                      "candidate"
+                    )
+                  }
                   className={`p-4 rounded-xl border transition text-left ${
-                    role === "candidate"
+                    role ===
+                    "candidate"
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
                       : "border-gray-300 dark:border-slate-700"
                   }`}
@@ -60,9 +138,14 @@ export default function RegisterPage() {
 
                 <button
                   type="button"
-                  onClick={() => setRole("recruiter")}
+                  onClick={() =>
+                    setRole(
+                      "recruiter"
+                    )
+                  }
                   className={`p-4 rounded-xl border transition text-left ${
-                    role === "recruiter"
+                    role ===
+                    "recruiter"
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
                       : "border-gray-300 dark:border-slate-700"
                   }`}
@@ -83,12 +166,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <input
-              type="hidden"
-              name="role"
-              value={role}
-            />
-
             {/* Full Name */}
             <div>
               <label className="block mb-2 font-medium">
@@ -103,6 +180,12 @@ export default function RegisterPage() {
 
                 <input
                   type="text"
+                  value={fullName}
+                  onChange={(e) =>
+                    setFullName(
+                      e.target.value
+                    )
+                  }
                   placeholder="John Doe"
                   className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -123,6 +206,12 @@ export default function RegisterPage() {
 
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) =>
+                    setEmail(
+                      e.target.value
+                    )
+                  }
                   placeholder="you@example.com"
                   className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -143,6 +232,12 @@ export default function RegisterPage() {
 
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(
+                      e.target.value
+                    )
+                  }
                   placeholder="Create password"
                   className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -163,13 +258,19 @@ export default function RegisterPage() {
 
                 <input
                   type="password"
+                  value={confirmPassword}
+                  onChange={(e) =>
+                    setConfirmPassword(
+                      e.target.value
+                    )
+                  }
                   placeholder="Confirm password"
                   className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
-            {/* Recruiter Company Field */}
+            {/* Company */}
             {role === "recruiter" && (
               <div>
                 <label className="block mb-2 font-medium">
@@ -184,6 +285,12 @@ export default function RegisterPage() {
 
                   <input
                     type="text"
+                    value={companyName}
+                    onChange={(e) =>
+                      setCompanyName(
+                        e.target.value
+                      )
+                    }
                     placeholder="Acme Inc."
                     className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -191,17 +298,19 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition"
             >
-              Create Account
+              {loading
+                ? "Creating Account..."
+                : "Create Account"}
             </button>
 
-            {/* Terms */}
             <p className="text-xs text-center text-gray-500">
-              By creating an account, you agree to our{" "}
+              By creating an account,
+              you agree to our{" "}
               <Link
                 href="/terms"
                 className="text-blue-600 hover:underline"

@@ -1,10 +1,60 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock } from "lucide-react";
 
 import AuthCard from "../../components/AuthCard";
 import AuthShowcase from "../../components/AuthShowcase";
 
+import { loginUser } from "../../hooks/useAuth";
+
 export default function LoginPage() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  async function handleSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+
+      const data = await loginUser(
+        email,
+        password
+      );
+
+      if (
+        data.role === "recruiter"
+      ) {
+        router.push(
+          "/recruiter/dashboard"
+        );
+      } else {
+        router.push(
+          "/candidate/dashboard"
+        );
+      }
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Invalid email or password"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="min-h-screen grid lg:grid-cols-2">
       {/* Left Side */}
@@ -18,7 +68,10 @@ export default function LoginPage() {
           title="Welcome Back"
           subtitle="Sign in to continue your hiring journey"
         >
-          <form className="space-y-5">
+          <form
+            className="space-y-5"
+            onSubmit={handleSubmit}
+          >
             <div>
               <label className="block mb-2 font-medium">
                 Email
@@ -33,6 +86,12 @@ export default function LoginPage() {
                 <input
                   type="email"
                   placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) =>
+                    setEmail(
+                      e.target.value
+                    )
+                  }
                   className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -52,6 +111,12 @@ export default function LoginPage() {
                 <input
                   type="password"
                   placeholder="Enter password"
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(
+                      e.target.value
+                    )
+                  }
                   className="w-full pl-10 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -73,9 +138,12 @@ export default function LoginPage() {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition"
             >
-              Login
+              {loading
+                ? "Logging in..."
+                : "Login"}
             </button>
 
             <div className="relative py-2">
@@ -96,7 +164,8 @@ export default function LoginPage() {
 
           <div className="text-center mt-6">
             <p className="text-gray-600 dark:text-slate-400">
-              Don't have an account?{" "}
+              Don't have an
+              account?{" "}
               <Link
                 href="/register"
                 className="text-blue-600 font-medium hover:underline"
