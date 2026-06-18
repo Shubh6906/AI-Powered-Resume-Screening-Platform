@@ -23,6 +23,8 @@ from app.services.match_engine import (
     calculate_match_score,
 )
 
+from app.models.application import Application
+
 router = APIRouter(
     prefix="/ai",
     tags=["AI"],
@@ -82,3 +84,80 @@ def match_resume_to_job(
     )
 
     return result
+
+@router.get("/rank/{job_id}")
+def rank_candidates(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "recruiter":
+        raise HTTPException(
+            status_code=403,
+            detail="Only recruiters can rank candidates",
+        )
+
+    job = (
+        db.query(Job)
+        .filter(Job.id == job_id)
+        .first()
+    )
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        )
+
+    applications = (
+        db.query(Application)
+        .filter(
+            Application.job_id == job_id
+        )
+        .all()
+    )
+
+    rankings = []
+
+    for application in applications:
+        resume = (
+            db.query(Resume)
+            .filter(
+                Resume.candidate_id
+                ==
+                application.candidate_id
+            )
+            .first()
+        )
+
+        if not resume:
+            continue
+
+        text = extract_text_from_pdf(
+            resume.file_path
+        )
+
+        parsed_data = parse_resume(
+            text
+        )
+
+        result = calculate_match_score(
+            parsed_data["skills"],
+            job.requirements,
+        )
+
+        rankings.append(
+            {
+                "candidate_id": application.candidate_id,
+                "match_score": result["match_score"],
+                "matched_skills": result["matched_skills"],
+                "missing_skills": result["missing_skills"],
+            }
+        )
+
+    rankings.sort(
+        key=lambda x: x["match_score"],
+        reverse=True,
+    )
+
+    return rankings
