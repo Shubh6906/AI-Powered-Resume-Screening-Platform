@@ -28,7 +28,10 @@ def get_analytics(
             detail="Only recruiters can access analytics",
         )
 
-    total_jobs = db.query(Job).count()
+    total_jobs = (
+        db.query(Job)
+        .count()
+    )
 
     total_applications = (
         db.query(Application)
@@ -38,7 +41,23 @@ def get_analytics(
     shortlisted_candidates = (
         db.query(Application)
         .filter(
-            Application.status == "Shortlisted"
+            Application.status == "shortlisted"
+        )
+        .count()
+    )
+
+    rejected_candidates = (
+        db.query(Application)
+        .filter(
+            Application.status == "rejected"
+        )
+        .count()
+    )
+
+    applied_candidates = (
+        db.query(Application)
+        .filter(
+            Application.status == "Applied"
         )
         .count()
     )
@@ -47,4 +66,6 @@ def get_analytics(
         "total_jobs": total_jobs,
         "total_applications": total_applications,
         "shortlisted_candidates": shortlisted_candidates,
+        "rejected_candidates": rejected_candidates,
+        "applied_candidates": applied_candidates,
     }

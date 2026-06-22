@@ -98,13 +98,37 @@ def get_job_applications(
             detail="Only recruiters can view applicants",
         )
 
-    return (
+    applications = (
         db.query(Application)
         .filter(
             Application.job_id == job_id
         )
         .all()
     )
+
+    result = []
+
+    for application in applications:
+        candidate = (
+            db.query(User)
+            .filter(
+                User.id == application.candidate_id
+            )
+            .first()
+        )
+
+        if candidate:
+            result.append(
+                {
+                    "application_id": application.id,
+                    "candidate_id": candidate.id,
+                    "full_name": candidate.full_name,
+                    "email": candidate.email,
+                    "status": application.status,
+                }
+            )
+
+    return result
 
 
 @router.put("/{application_id}/status")

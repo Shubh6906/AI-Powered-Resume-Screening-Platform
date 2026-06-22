@@ -10,6 +10,7 @@ from app.core.auth import get_current_user
 from app.models.user import User
 from app.models.job import Job
 from app.models.resume import Resume
+from app.models.application import Application
 
 from app.services.pdf_extractor import (
     extract_text_from_pdf,
@@ -23,12 +24,11 @@ from app.services.match_engine import (
     calculate_match_score,
 )
 
-from app.models.application import Application
-
 router = APIRouter(
     prefix="/ai",
     tags=["AI"],
 )
+
 
 @router.post("/match/{job_id}")
 def match_resume_to_job(
@@ -85,6 +85,7 @@ def match_resume_to_job(
 
     return result
 
+
 @router.get("/rank/{job_id}")
 def rank_candidates(
     job_id: int,
@@ -99,7 +100,9 @@ def rank_candidates(
 
     job = (
         db.query(Job)
-        .filter(Job.id == job_id)
+        .filter(
+            Job.id == job_id
+        )
         .first()
     )
 
@@ -120,6 +123,17 @@ def rank_candidates(
     rankings = []
 
     for application in applications:
+        candidate = (
+            db.query(User)
+            .filter(
+                User.id == application.candidate_id
+            )
+            .first()
+        )
+
+        if not candidate:
+            continue
+
         resume = (
             db.query(Resume)
             .filter(
@@ -148,7 +162,9 @@ def rank_candidates(
 
         rankings.append(
             {
-                "candidate_id": application.candidate_id,
+                "candidate_id": candidate.id,
+                "full_name": candidate.full_name,
+                "email": candidate.email,
                 "match_score": result["match_score"],
                 "matched_skills": result["matched_skills"],
                 "missing_skills": result["missing_skills"],
