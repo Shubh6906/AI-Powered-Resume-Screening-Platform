@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
 
@@ -24,14 +25,17 @@ interface Candidate {
 }
 
 export default function CandidatesPage() {
+  const searchParams = useSearchParams();
+
+  const jobId = Number(
+    searchParams.get("jobId") || 1
+  );
+
   const [candidates, setCandidates] =
     useState<Candidate[]>([]);
 
   const [search, setSearch] =
     useState("");
-
-  // Temporary job id
-  const jobId = 1;
 
   async function fetchCandidates() {
     try {
@@ -48,7 +52,7 @@ export default function CandidatesPage() {
 
   useEffect(() => {
     fetchCandidates();
-  }, []);
+  }, [jobId]);
 
   async function handleStatusUpdate(
     applicationId: number,
@@ -92,7 +96,7 @@ export default function CandidatesPage() {
         </h1>
 
         <p className="text-gray-500 mt-2">
-          Manage applicants
+          Applicants for Job #{jobId}
         </p>
       </div>
 
@@ -139,75 +143,88 @@ export default function CandidatesPage() {
           </thead>
 
           <tbody>
-            {filteredCandidates.map(
-              (candidate) => (
-                <tr
-                  key={
-                    candidate.application_id
-                  }
-                  className="border-b border-gray-200 dark:border-slate-800"
-                >
-                  <td className="p-4">
-                    {
-                      candidate.full_name
+            {filteredCandidates.length >
+            0 ? (
+              filteredCandidates.map(
+                (candidate) => (
+                  <tr
+                    key={
+                      candidate.application_id
                     }
-                  </td>
-
-                  <td className="p-4">
-                    {candidate.email}
-                  </td>
-
-                  <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        candidate.status.toLowerCase() ===
-                        "shortlisted"
-                          ? "bg-green-100 text-green-700"
-                          : candidate.status.toLowerCase() ===
-                            "rejected"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
+                    className="border-b border-gray-200 dark:border-slate-800"
+                  >
+                    <td className="p-4 font-medium">
                       {
-                        candidate.status
+                        candidate.full_name
                       }
-                    </span>
-                  </td>
+                    </td>
 
-                  <td className="p-4">
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() =>
-                          handleStatusUpdate(
-                            candidate.application_id,
-                            "shortlisted"
-                          )
-                        }
-                        className="text-green-600"
-                      >
-                        <CheckCircle
-                          size={20}
-                        />
-                      </button>
+                    <td className="p-4">
+                      {candidate.email}
+                    </td>
 
-                      <button
-                        onClick={() =>
-                          handleStatusUpdate(
-                            candidate.application_id,
-                            "rejected"
-                          )
-                        }
-                        className="text-red-600"
+                    <td className="p-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          candidate.status.toLowerCase() ===
+                          "shortlisted"
+                            ? "bg-green-100 text-green-700"
+                            : candidate.status.toLowerCase() ===
+                              "rejected"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
                       >
-                        <XCircle
-                          size={20}
-                        />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                        {
+                          candidate.status
+                        }
+                      </span>
+                    </td>
+
+                    <td className="p-4">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() =>
+                            handleStatusUpdate(
+                              candidate.application_id,
+                              "shortlisted"
+                            )
+                          }
+                          className="text-green-600 hover:scale-110 transition"
+                        >
+                          <CheckCircle
+                            size={20}
+                          />
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            handleStatusUpdate(
+                              candidate.application_id,
+                              "rejected"
+                            )
+                          }
+                          className="text-red-600 hover:scale-110 transition"
+                        >
+                          <XCircle
+                            size={20}
+                          />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
               )
+            ) : (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="text-center py-10 text-gray-500"
+                >
+                  No applicants found for
+                  this job.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

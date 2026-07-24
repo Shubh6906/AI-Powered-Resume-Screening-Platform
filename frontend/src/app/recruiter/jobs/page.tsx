@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
 import JobModal from "../../../components/dashboard/JobModal";
@@ -11,6 +12,7 @@ import {
   Eye,
   Pencil,
   Trash2,
+  Brain,
 } from "lucide-react";
 
 import {
@@ -40,6 +42,8 @@ export default function JobsPage() {
 
   const [editingJob, setEditingJob] =
     useState<Job | null>(null);
+
+  const router = useRouter();
 
   async function fetchJobs() {
     try {
@@ -233,33 +237,45 @@ export default function JobsPage() {
                   </td>
 
                   <td className="p-4">
-                    <div className="flex gap-4">
+                    <div className="flex items-center gap-5">
                       <Eye
                         size={18}
-                        className="cursor-pointer"
+                        className="cursor-pointer text-blue-600 hover:scale-110 transition"
+                        // title="View Applicants"
+                        onClick={() =>
+                          router.push(
+                            `/recruiter/candidates?jobId=${job.id}`
+                          )
+                        }
+                      />
+
+                      <Brain
+                        size={18}
+                        className="cursor-pointer text-purple-600 hover:scale-110 transition"
+                        // title="AI Ranking"
+                        onClick={() =>
+                          router.push(
+                            `/recruiter/ranking?jobId=${job.id}`
+                          )
+                        }
                       />
 
                       <Pencil
                         size={18}
-                        className="cursor-pointer"
+                        className="cursor-pointer text-amber-500 hover:scale-110 transition"
+                        // title="Edit Job"
                         onClick={() => {
-                          setEditingJob(
-                            job
-                          );
-
-                          setIsModalOpen(
-                            true
-                          );
+                          setEditingJob(job);
+                          setIsModalOpen(true);
                         }}
                       />
 
                       <Trash2
                         size={18}
-                        className="cursor-pointer text-red-500"
+                        className="cursor-pointer text-red-500 hover:scale-110 transition"
+                        // title="Delete Job"
                         onClick={() =>
-                          handleDelete(
-                            job.id
-                          )
+                          handleDelete(job.id)
                         }
                       />
                     </div>
