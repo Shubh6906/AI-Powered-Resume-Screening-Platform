@@ -29,7 +29,7 @@ export default function AuthShowcase() {
   
           <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl">
             <h2 className="text-3xl font-bold">
-              95%
+              98%
             </h2>
   
             <p>Matching Accuracy</p>

@@ -1,3 +1,4 @@
+import ScrollProgress from "../components/ScrollProgress";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Stats from "../components/Stats";
@@ -8,10 +9,12 @@ import Testimonials from "../components/Testimonials";
 import FAQ from "../components/FAQ";
 import CTA from "../components/CTA";
 import Footer from "../components/Footer";
+import BackToTop from "../components/BackToTop";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-black dark:bg-slate-950 dark:text-white transition-colors duration-300">
+      <ScrollProgress />
       <Navbar />
       <Hero />
       <Stats />
@@ -22,6 +25,7 @@ export default function Home() {
       <FAQ />
       <CTA />
       <Footer />
+      <BackToTop />
     </main>
   );
 }

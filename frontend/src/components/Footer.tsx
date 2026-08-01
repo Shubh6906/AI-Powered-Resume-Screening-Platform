@@ -122,10 +122,10 @@ export default function Footer() {
 
               <li>
                 <a
-                  href="#pricing"
+                  href="#testimonials"
                   className="text-gray-600 dark:text-slate-400 hover:text-blue-600 transition"
                 >
-                  Pricing
+                  Testimonials
                 </a>
               </li>
 
