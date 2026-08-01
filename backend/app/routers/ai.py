@@ -177,3 +177,83 @@ def rank_candidates(
     )
 
     return rankings
+
+@router.get("/recommend")
+def recommend_jobs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "candidate":
+        raise HTTPException(
+            status_code=403,
+            detail="Only candidates can get recommendations",
+        )
+
+    resume = (
+        db.query(Resume)
+        .filter(
+            Resume.candidate_id == current_user.id
+        )
+        .first()
+    )
+
+    if not resume:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume not found",
+        )
+
+    text = extract_text_from_pdf(
+        resume.file_path
+    )
+
+    parsed_data = parse_resume(text)
+
+    applied_job_ids = [
+        application.job_id
+        for application in (
+            db.query(Application)
+            .filter(
+                Application.candidate_id == current_user.id
+            )
+            .all()
+        )
+    ]
+
+    jobs = (
+        db.query(Job)
+        .filter(
+            ~Job.id.in_(applied_job_ids)
+            if applied_job_ids
+            else True
+        )
+        .all()
+    )
+
+    recommendations = []
+
+    for job in jobs:
+        result = calculate_match_score(
+            parsed_data["skills"],
+            job.requirements,
+        )
+
+        recommendations.append(
+            {
+                "job_id": job.id,
+                "title": job.title,
+                "company": job.company,
+                "location": job.location,
+                "salary": job.salary,
+                "match_score": result["match_score"],
+                "matched_skills": result["matched_skills"],
+                "missing_skills": result["missing_skills"],
+            }
+        )
+
+    recommendations.sort(
+        key=lambda x: x["match_score"],
+        reverse=True,
+    )
+
+    return recommendations[:5]
