@@ -4,25 +4,14 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
+import CandidateFilters from "../../../components/dashboard/CandidateFilters";
+import CandidateTable from "../../../components/dashboard/CandidateTable";
 
 import {
-  Search,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
-
-import {
+  Application,
   getJobApplications,
   updateApplicationStatus,
 } from "../../../hooks/useApplications";
-
-interface Candidate {
-  application_id: number;
-  candidate_id: number;
-  full_name: string;
-  email: string;
-  status: string;
-}
 
 export default function CandidatesPage() {
   const searchParams = useSearchParams();
@@ -32,21 +21,31 @@ export default function CandidatesPage() {
   );
 
   const [candidates, setCandidates] =
-    useState<Candidate[]>([]);
+    useState<Application[]>([]);
 
   const [search, setSearch] =
     useState("");
 
+  const [statusFilter, setStatusFilter] =
+    useState("all");
+
+  const [loading, setLoading] =
+    useState(true);
+
   async function fetchCandidates() {
     try {
+      setLoading(true);
+
       const data =
-        await getJobApplications(
-          jobId
-        );
+        await getJobApplications(jobId);
 
       setCandidates(data);
     } catch (error) {
       console.error(error);
+
+      alert("Failed to load candidates");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -65,10 +64,6 @@ export default function CandidatesPage() {
       );
 
       await fetchCandidates();
-
-      alert(
-        `Candidate ${status}`
-      );
     } catch (error) {
       console.error(error);
 
@@ -79,14 +74,40 @@ export default function CandidatesPage() {
   }
 
   const filteredCandidates =
-    candidates.filter(
-      (candidate) =>
+    candidates.filter((candidate) => {
+      const matchesSearch =
         candidate.full_name
           .toLowerCase()
           .includes(
             search.toLowerCase()
-          )
-    );
+          ) ||
+        candidate.email
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+        candidate.job_title
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+        candidate.company
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          );
+
+      const matchesStatus =
+        statusFilter === "all"
+          ? true
+          : candidate.status.toLowerCase() ===
+            statusFilter.toLowerCase();
+
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
+    });
 
   return (
     <DashboardLayout>
@@ -95,140 +116,38 @@ export default function CandidatesPage() {
           Candidates
         </h1>
 
-        <p className="text-gray-500 mt-2">
+        <p className="mt-2 text-gray-500">
           Applicants for Job #{jobId}
         </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 mb-6">
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-3 text-gray-400"
-          />
+      <CandidateFilters
+        search={search}
+        setSearch={setSearch}
+        statusFilter={statusFilter}
+        setStatusFilter={
+          setStatusFilter
+        }
+      />
 
-          <input
-            placeholder="Search candidates..."
-            value={search}
-            onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
-            }
-            className="w-full pl-10 py-2 pr-4 border border-gray-300 dark:border-slate-700 rounded-xl bg-transparent"
-          />
+      {loading ? (
+        <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-10 text-center">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+
+          <p className="text-gray-500">
+            Loading candidates...
+          </p>
         </div>
-      </div>
-
-      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200 dark:border-slate-800">
-              <th className="text-left p-4">
-                Candidate
-              </th>
-
-              <th className="text-left p-4">
-                Email
-              </th>
-
-              <th className="text-left p-4">
-                Status
-              </th>
-
-              <th className="text-left p-4">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredCandidates.length >
-            0 ? (
-              filteredCandidates.map(
-                (candidate) => (
-                  <tr
-                    key={
-                      candidate.application_id
-                    }
-                    className="border-b border-gray-200 dark:border-slate-800"
-                  >
-                    <td className="p-4 font-medium">
-                      {
-                        candidate.full_name
-                      }
-                    </td>
-
-                    <td className="p-4">
-                      {candidate.email}
-                    </td>
-
-                    <td className="p-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          candidate.status.toLowerCase() ===
-                          "shortlisted"
-                            ? "bg-green-100 text-green-700"
-                            : candidate.status.toLowerCase() ===
-                              "rejected"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {
-                          candidate.status
-                        }
-                      </span>
-                    </td>
-
-                    <td className="p-4">
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() =>
-                            handleStatusUpdate(
-                              candidate.application_id,
-                              "shortlisted"
-                            )
-                          }
-                          className="text-green-600 hover:scale-110 transition"
-                        >
-                          <CheckCircle
-                            size={20}
-                          />
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            handleStatusUpdate(
-                              candidate.application_id,
-                              "rejected"
-                            )
-                          }
-                          className="text-red-600 hover:scale-110 transition"
-                        >
-                          <XCircle
-                            size={20}
-                          />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              )
-            ) : (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="text-center py-10 text-gray-500"
-                >
-                  No applicants found for
-                  this job.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      ) : (
+        <CandidateTable
+          candidates={
+            filteredCandidates
+          }
+          onStatusUpdate={
+            handleStatusUpdate
+          }
+        />
+      )}
     </DashboardLayout>
   );
 }

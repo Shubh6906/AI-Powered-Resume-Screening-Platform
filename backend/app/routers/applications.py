@@ -9,9 +9,12 @@ from app.core.deps import get_db
 
 from app.models.user import User
 from app.models.job import Job
+from app.models.resume import Resume
 from app.models.application import Application
 
-from app.schemas.application import ApplicationStatusUpdate
+from app.schemas.application import (
+    ApplicationStatusUpdate,
+)
 
 router = APIRouter(
     prefix="/applications",
@@ -55,7 +58,7 @@ def apply_for_job(
     if existing_application:
         raise HTTPException(
             status_code=400,
-            detail="Already applied to this job",
+            detail="Already applied",
         )
 
     application = Application(
@@ -72,18 +75,71 @@ def apply_for_job(
     }
 
 
-@router.get("/my")
-def get_my_applications(
+@router.get("/")
+def get_all_applications(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return (
-        db.query(Application)
-        .filter(
-            Application.candidate_id == current_user.id
+    if current_user.role != "recruiter":
+        raise HTTPException(
+            status_code=403,
+            detail="Only recruiters can access applications",
         )
+
+    applications = (
+        db.query(Application)
         .all()
     )
+
+    result = []
+
+    for application in applications:
+
+        candidate = (
+            db.query(User)
+            .filter(
+                User.id == application.candidate_id
+            )
+            .first()
+        )
+
+        job = (
+            db.query(Job)
+            .filter(
+                Job.id == application.job_id
+            )
+            .first()
+        )
+
+        resume = (
+            db.query(Resume)
+            .filter(
+                Resume.candidate_id == application.candidate_id
+            )
+            .first()
+        )
+
+        if not candidate or not job:
+            continue
+
+        result.append(
+            {
+                "application_id": application.id,
+                "candidate_id": candidate.id,
+                "full_name": candidate.full_name,
+                "email": candidate.email,
+                "job_id": job.id,
+                "job_title": job.title,
+                "company": job.company,
+                "status": application.status,
+                "resume_uploaded": resume is not None,
+                "ai_match_score": application.ai_match_score,
+                "recruiter_notes": application.recruiter_notes,
+                "created_at": application.created_at,
+            }
+        )
+
+    return result
 
 
 @router.get("/job/{job_id}")
@@ -95,7 +151,7 @@ def get_job_applications(
     if current_user.role != "recruiter":
         raise HTTPException(
             status_code=403,
-            detail="Only recruiters can view applicants",
+            detail="Only recruiters can access applicants",
         )
 
     applications = (
@@ -109,6 +165,7 @@ def get_job_applications(
     result = []
 
     for application in applications:
+
         candidate = (
             db.query(User)
             .filter(
@@ -117,16 +174,29 @@ def get_job_applications(
             .first()
         )
 
-        if candidate:
-            result.append(
-                {
-                    "application_id": application.id,
-                    "candidate_id": candidate.id,
-                    "full_name": candidate.full_name,
-                    "email": candidate.email,
-                    "status": application.status,
-                }
+        resume = (
+            db.query(Resume)
+            .filter(
+                Resume.candidate_id == application.candidate_id
             )
+            .first()
+        )
+
+        if not candidate:
+            continue
+
+        result.append(
+            {
+                "application_id": application.id,
+                "candidate_id": candidate.id,
+                "full_name": candidate.full_name,
+                "email": candidate.email,
+                "status": application.status,
+                "resume_uploaded": resume is not None,
+                "ai_match_score": application.ai_match_score,
+                "created_at": application.created_at,
+            }
+        )
 
     return result
 
@@ -141,7 +211,7 @@ def update_application_status(
     if current_user.role != "recruiter":
         raise HTTPException(
             status_code=403,
-            detail="Only recruiters can update status",
+            detail="Only recruiters can update applications",
         )
 
     application = (
@@ -163,5 +233,5 @@ def update_application_status(
     db.commit()
 
     return {
-        "message": "Application status updated successfully"
+        "message": "Application updated successfully"
     }

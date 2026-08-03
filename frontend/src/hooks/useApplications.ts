@@ -1,5 +1,39 @@
 import api from "../lib/api";
 
+export interface Application {
+  application_id: number;
+  candidate_id: number;
+
+  full_name: string;
+  email: string;
+
+  job_id: number;
+  job_title: string;
+  company: string;
+
+  status: string;
+
+  resume_uploaded: boolean;
+
+  ai_match_score: number;
+
+  recruiter_notes?: string;
+
+  created_at: string;
+}
+
+/* ===========================
+   Recruiter APIs
+=========================== */
+
+export async function getApplications() {
+  const response = await api.get(
+    "/applications"
+  );
+
+  return response.data as Application[];
+}
+
 export async function getJobApplications(
   jobId: number
 ) {
@@ -7,7 +41,7 @@ export async function getJobApplications(
     `/applications/job/${jobId}`
   );
 
-  return response.data;
+  return response.data as Application[];
 }
 
 export async function updateApplicationStatus(
@@ -19,6 +53,20 @@ export async function updateApplicationStatus(
     {
       status,
     }
+  );
+
+  return response.data;
+}
+
+/* ===========================
+   Candidate APIs
+=========================== */
+
+export async function applyForJob(
+  jobId: number
+) {
+  const response = await api.post(
+    `/applications/${jobId}`
   );
 
   return response.data;
