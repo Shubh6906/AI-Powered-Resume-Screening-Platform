@@ -1,35 +1,140 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import CandidateLayout from "../../../components/dashboard/CandidateLayout";
-import { Upload } from "lucide-react";
+
+import ResumeHeader from "../../../components/candidate/ResumeHeader";
+import ResumeViewer from "../../../components/candidate/ResumeViewer";
+import ResumeActions from "../../../components/candidate/ResumeActions";
+import ResumeAnalysis from "../../../components/candidate/ResumeAnalysis";
+import SkillsCard from "../../../components/candidate/SkillsCard";
+import MissingSkills from "../../../components/candidate/MissingSkills";
+import AISuggestions from "../../../components/candidate/AISuggestions";
+
+import {
+  Resume,
+  ResumeAnalysis as ResumeAnalysisType,
+  getResume,
+  getResumeAnalysis,
+} from "../../../hooks/useResume";
 
 export default function ResumePage() {
+  const [resume, setResume] =
+    useState<Resume | null>(null);
+
+  const [analysis, setAnalysis] =
+    useState<ResumeAnalysisType | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  async function loadResume() {
+    try {
+      const resumeData =
+        await getResume();
+
+      setResume(resumeData);
+
+      try {
+        const analysisData =
+          await getResumeAnalysis();
+
+        setAnalysis(
+          analysisData
+        );
+      } catch (error) {
+        console.error(
+          "Analysis unavailable",
+          error
+        );
+
+        setAnalysis(null);
+      }
+    } catch (error) {
+      console.error(error);
+
+      setResume(null);
+      setAnalysis(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadResume();
+  }, []);
+
+  if (loading) {
+    return (
+      <CandidateLayout>
+        <div className="flex justify-center items-center py-32">
+
+          <div className="h-12 w-12 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+
+        </div>
+      </CandidateLayout>
+    );
+  }
+
   return (
     <CandidateLayout>
-      <h1 className="text-4xl font-bold mb-4">
-        My Resume
-      </h1>
 
-      <p className="text-gray-500 mb-8">
-        Upload and manage your resume.
-      </p>
+      <ResumeHeader
+        resume={resume}
+      />
 
-      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-12 text-center">
-        <Upload
-          size={48}
-          className="mx-auto mb-4 text-blue-500"
+      <div className="mt-8">
+
+        <ResumeViewer
+          resume={resume}
         />
 
-        <h2 className="text-xl font-semibold mb-2">
-          Upload Resume
-        </h2>
-
-        <p className="text-gray-500 mb-6">
-          PDF and DOCX supported
-        </p>
-
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-xl">
-          Choose File
-        </button>
       </div>
+
+      <div className="mt-8">
+
+        <ResumeActions
+          resume={resume}
+          refreshResume={
+            loadResume
+          }
+        />
+
+      </div>
+
+      {analysis && (
+        <>
+          <div className="mt-8">
+
+            <ResumeAnalysis
+              analysis={analysis}
+            />
+
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 mt-8">
+
+            <SkillsCard
+              analysis={analysis}
+            />
+
+            <MissingSkills
+              analysis={analysis}
+            />
+
+          </div>
+
+          <div className="mt-8">
+
+            <AISuggestions
+              analysis={analysis}
+            />
+
+          </div>
+        </>
+      )}
+
     </CandidateLayout>
   );
 }
